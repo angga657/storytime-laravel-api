@@ -167,6 +167,19 @@ class UserController extends Controller
             // Buat token API untuk pengguna
             $token = $user->createToken('tokenName', ['*'], Carbon::now()->addHour())->plainTextToken;
     
+            // return response()->json([
+            //     "status" => "Berhasil",
+            //     "code" => 201,
+            //     "message" => "User successfully registered and logged in",
+            //     "data" => [
+            //         "id" => $user->id,
+            //         "name" => $user->name,
+            //         "username" => $user->username,
+            //         "email" => $user->email,
+            //         "token" => $token // Kembalikan token
+            //     ]
+            // ], 201);
+
             return response()->json([
                 "status" => "Berhasil",
                 "code" => 201,
@@ -176,6 +189,8 @@ class UserController extends Controller
                     "name" => $user->name,
                     "username" => $user->username,
                     "email" => $user->email,
+                    "about_me" => $user->about_me,
+                    "avatar_image" => $user->avatar_image,
                     "token" => $token // Kembalikan token
                 ]
             ], 201);
