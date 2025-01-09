@@ -47,10 +47,12 @@ Route::get('/health', function () {
     ], 200);
 });
 
+Route::get('/books/category', [BookController::class, 'booksByCategory']);
+
 
 Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
     Route::apiResource('/categories', CategoryController::class);
-    Route::apiResource('/books', BookController::class);
+    Route::apiResource('/books', BookController::class)->except(['index','show']);
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::post('/upload-image', [UserController::class, 'uploadImage']);
@@ -58,3 +60,5 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
 
     Route::get('/user', [UserController::class, 'getUser']);
 });
+
+Route::apiResource('/books', BookController::class)->only(['index', 'show']);
