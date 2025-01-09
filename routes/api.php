@@ -51,7 +51,7 @@ Route::get('/health', function () {
 
 
 Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
-    Route::apiResource('/categories', CategoryController::class);
+    Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
     Route::apiResource('/books', BookController::class)->except(['index','show']);
 
     Route::post('/logout', [UserController::class, 'logout']);
@@ -61,5 +61,6 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
     Route::get('/user', [UserController::class, 'getUser']);
 });
 
+Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('/books', BookController::class)->only(['index', 'show']);
 Route::get('/books-users', [BookController::class, 'userBooksIndex']);
