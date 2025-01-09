@@ -289,9 +289,9 @@ class BookController extends Controller
                 return [
                     'category_id' => $category->id,
                     'category_name' => $category->name,
-                    'stories' => $category->books->map(function ($book) {
+                    'books' => $category->books->map(function ($book) {
                         return [
-                            'story_id' => $book->id,
+                            'book_id' => $book->id,
                             'title' => $book->title,
                             'author' => $book->user ? $book->user->username : 'Unknown',
                             'content' => $book->content,
