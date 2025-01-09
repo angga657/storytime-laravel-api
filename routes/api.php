@@ -47,7 +47,7 @@ Route::get('/health', function () {
     ], 200);
 });
 
-Route::get('/books/category', [BookController::class, 'booksByCategory']);
+
 
 
 Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
@@ -62,3 +62,4 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
 });
 
 Route::apiResource('/books', BookController::class)->only(['index', 'show']);
+Route::get('/books-users', [BookController::class, 'userBooksIndex']);
