@@ -15,10 +15,69 @@ class BookController extends Controller
      */
     public function index(Request $request)
     {
+        // $keyword = $request->input('keyword');
+
+        // $query = Book::with(['user', 'category']);
+
+        // if ($keyword) {
+        //     $query->where('title', 'like', "%{$keyword}%")
+        //         ->orWhereHas('user', function (Builder $q) use ($keyword) {
+        //             $q->where('username', 'like', "%{$keyword}%");
+        //         })
+        //         ->orWhereHas('category', function (Builder $q) use ($keyword) {
+        //             $q->where('name', 'like', "%{$keyword}%");
+        //         })
+        //         ->orWhere('content', 'like', "%{$keyword}%");
+        // }
+
+        // $books = $query->paginate(10);
+
+        // $groupedByCategory = $books->groupBy(function ($book) {
+        //     return $book->category->id ?? 'Unknown Category';
+        // });
+
+        // $formattedBooks = $groupedByCategory->map(function ($books, $categoryId) {
+        //     $categoryName = $books->first()->category->name ?? 'Unknown Category';
+
+        //     return [
+        //         'category_id' => $categoryId,
+        //         'category_name' => $categoryName,
+        //         'books' => $books->map(function ($book) {
+        //             $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
+        //             $imagePaths = $imagePaths ?? [];
+
+        //             return [
+        //                 'book_id' => $book->id,
+        //                 'title' => $book->title,
+        //                 'user' => $book->user->username ?? 'Unknown Author',
+        //                 'avatar_image' => $book->user->avatar_image ?? null,
+        //                 'content' => $book->content,
+        //                 'created_at' => $book->created_at->toIso8601String(),
+        //                 'images' => array_map(fn($image, $key) => [
+        //                     'id' => $image['id'] ?? $key + 1,
+        //                     'url' => $image['url'] ?? (is_string($image) ? $image : ''),
+        //                 ], $imagePaths, array_keys($imagePaths)),
+        //             ];
+        //         })->values(),
+        //     ];
+        // })->values();
+
+        // return response()->json([
+        //     'data' => $formattedBooks,
+        //     'current_page' => $books->currentPage(),
+        //     'last_page' => $books->lastPage(),
+        //     'per_page' => $books->perPage(),
+        //     'total' => $books->total(),
+        // ]);
+
+        //
+        // Get the search keyword from the request
         $keyword = $request->input('keyword');
 
+        // Start the query for books
         $query = Book::with(['user', 'category']);
 
+        // If a keyword is provided, apply the search conditions
         if ($keyword) {
             $query->where('title', 'like', "%{$keyword}%")
                 ->orWhereHas('user', function (Builder $q) use ($keyword) {
@@ -30,38 +89,39 @@ class BookController extends Controller
                 ->orWhere('content', 'like', "%{$keyword}%");
         }
 
-        $books = $query->paginate(10);
+        // Paginate the results
+        $books = $query->with('user', 'category')
+            ->leftJoin('users', 'books.id_user', '=', 'users.id')
+            ->leftJoin('categories', 'books.id_category', '=', 'categories.id')
+            // ->orderBy('categories.name', 'asc')
+            ->select('books.*')
+            ->paginate(10);
 
-        $groupedByCategory = $books->groupBy(function ($book) {
-            return $book->category->id ?? 'Unknown Category';
-        });
-
-        $formattedBooks = $groupedByCategory->map(function ($books, $categoryId) {
-            $categoryName = $books->first()->category->name ?? 'Unknown Category';
+        // Format the results
+        $formattedBooks = $books->map(function ($book) {
+            // Pastikan konversi gambar dengan aman
+            $imagePaths = is_string($book->image) 
+                ? json_decode($book->image, true) 
+                : ($book->image ?? []);
 
             return [
-                'category_id' => $categoryId,
-                'category_name' => $categoryName,
-                'books' => $books->map(function ($book) {
-                    $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
-                    $imagePaths = $imagePaths ?? [];
-
+                'id' => $book->id,
+                'images' => array_map(function ($image, $key) {
                     return [
-                        'book_id' => $book->id,
-                        'title' => $book->title,
-                        'user' => $book->user->username ?? 'Unknown Author',
-                        'avatar_image' => $book->user->avatar_image ?? null,
-                        'content' => $book->content,
-                        'created_at' => $book->created_at->toIso8601String(),
-                        'images' => array_map(fn($image, $key) => [
-                            'id' => $image['id'] ?? $key + 1,
-                            'url' => $image['url'] ?? (is_string($image) ? $image : ''),
-                        ], $imagePaths, array_keys($imagePaths)),
+                        'id' => is_array($image) && isset($image['id']) ? $image['id'] : $key + 1,
+                        'url' => is_array($image) && isset($image['url']) 
+                            ? $image['url'] 
+                            : (is_string($image) ? $image : ''),
                     ];
-                })->values(),
+                }, $imagePaths, array_keys($imagePaths)),
+                'title' => $book->title,
+                'username' => $book->user ? $book->user->username : null,
+                'category' => $book->category ? $book->category->name : null,
+                'content' => $book->content,
             ];
-        })->values();
+        });
 
+        // Return the paginated products as JSON
         return response()->json([
             'data' => $formattedBooks,
             'current_page' => $books->currentPage(),
@@ -77,40 +137,6 @@ class BookController extends Controller
     public function store(Request $request)
     {
         //
-        // $request->validate([
-        //     'title' => 'required|string',
-        //     'image.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        //     'id_user' => 'required|exists:users,id',
-        //     'id_category' => 'required|exists:categories,id',
-        //     'content' => 'required|string',
-        // ], [
-        //     'title.required' => 'Title must be included.',
-        //     'image.*.required' => 'Image must be included.',
-        //     'id_user.exists' => 'User must be valid.',
-        //     'id_category.exists' => 'Category must be valid.',
-        //     'image.*.image' => 'The file must be an image.',
-        //     'image.*.mimes' => 'The image must be a file of type: jpeg, png, jpg, gif.',
-        //     'image.*.max' => 'The image size must not exceed 2MB.',
-        // ]);
-    
-        // $imageObjects = [];
-        // if ($request->hasFile('image')) {
-        //     foreach ($request->file('image') as $key => $image) {
-        //         $path = $image->store('books', 'public'); // Simpan gambar
-        //         $imageObjects[] = [
-        //             'id' => $key + 1, // Anda bisa menggunakan metode unik lainnya untuk ID, seperti UUID
-        //             'url' => asset('storage/' . $path)
-        //         ];
-        //     }
-        // }
-
-        // // Simpan data ke database
-        // $requestData = $request->all();
-        // $requestData['image'] = json_encode($imageObjects); // Simpan sebagai JSON 
-
-        // Book::create($requestData);
-    
-        // return response()->json(['message' => 'Book berhasil disimpan'], 201);
         $request->validate([
             'title' => 'required|string',
             'image.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -333,6 +359,33 @@ class BookController extends Controller
             'per_page' => $books->perPage(),
             'total' => $books->total(),
         ]);
+    }
+
+    public function userBookDetail($id)
+    {
+        $book = Book::with('user')->find($id);
+
+        if (!$book) {
+            return response()->json(['message' => 'Book not found'], 404);
+        }
+
+        $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
+        $imagePaths = $imagePaths ?? [];
+
+        $formattedBook = [
+            'book_id' => $book->id,
+            'title' => $book->title,
+            'user' => $book->user->username ?? 'Unknown Author',
+            'avatar_image' => $book->user->avatar_image ?? null,
+            'content' => $book->content,
+            'created_at' => $book->created_at->toIso8601String(),
+            'images' => array_map(fn($image, $key) => [
+                'id' => $image['id'] ?? $key + 1,
+                'url' => $image['url'] ?? (is_string($image) ? $image : ''),
+            ], $imagePaths, array_keys($imagePaths)),
+        ];
+
+        return response()->json($formattedBook);
     }
 
 }
