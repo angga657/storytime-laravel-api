@@ -15,14 +15,10 @@ class BookController extends Controller
      */
     public function index(Request $request)
     {
-        //
-        // Get the search keyword from the request
         $keyword = $request->input('keyword');
 
-        // Start the query for books
         $query = Book::with(['user', 'category']);
 
-        // If a keyword is provided, apply the search conditions
         if ($keyword) {
             $query->where('title', 'like', "%{$keyword}%")
                 ->orWhereHas('user', function (Builder $q) use ($keyword) {
@@ -34,39 +30,27 @@ class BookController extends Controller
                 ->orWhere('content', 'like', "%{$keyword}%");
         }
 
-        // Paginate the results
-        $books = $query->with('user', 'category')
-            ->leftJoin('users', 'books.id_user', '=', 'users.id')
-            ->leftJoin('categories', 'books.id_category', '=', 'categories.id')
-            // ->orderBy('categories.name', 'asc')
-            ->select('books.*')
-            ->paginate(10);
+        $books = $query->paginate(10);
 
-        // Format the results
         $formattedBooks = $books->map(function ($book) {
-            // Pastikan konversi gambar dengan aman
-            $imagePaths = is_string($book->image) 
-                ? json_decode($book->image, true) 
-                : ($book->image ?? []);
-
+            // Pastikan hanya decode jika $book->image adalah string
+            $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
+        
+            $imagePaths = $imagePaths ?? []; // Pastikan tetap array jika null
+        
             return [
                 'id' => $book->id,
-                'images' => array_map(function ($image, $key) {
-                    return [
-                        'id' => is_array($image) && isset($image['id']) ? $image['id'] : $key + 1,
-                        'url' => is_array($image) && isset($image['url']) 
-                            ? $image['url'] 
-                            : (is_string($image) ? $image : ''),
-                    ];
-                }, $imagePaths, array_keys($imagePaths)),
+                'images' => array_map(fn($image, $key) => [
+                    'id' => $image['id'] ?? $key + 1,
+                    'url' => $image['url'] ?? (is_string($image) ? $image : ''),
+                ], $imagePaths, array_keys($imagePaths)),
                 'title' => $book->title,
-                'username' => $book->user ? $book->user->username : null,
-                'category' => $book->category ? $book->category->name : null,
+                'username' => $book->user->username ?? null,
+                'category' => $book->category->name ?? null,
                 'content' => $book->content,
             ];
         });
 
-        // Return the paginated products as JSON
         return response()->json([
             'data' => $formattedBooks,
             'current_page' => $books->currentPage(),
@@ -295,5 +279,28 @@ class BookController extends Controller
         return response()->json([
             'message' => 'Book berhasil dihapus.',
         ], 200);
+    }
+
+    public function booksByCategory()
+    {
+        $categories = \App\Models\Category::with(['books.user'])
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'category_id' => $category->id,
+                    'category_name' => $category->name,
+                    'stories' => $category->books->map(function ($book) {
+                        return [
+                            'story_id' => $book->id,
+                            'title' => $book->title,
+                            'author' => $book->user ? $book->user->username : 'Unknown',
+                            'content' => $book->content,
+                            'created_at' => $book->created_at->toISOString(),
+                        ];
+                    }),
+                ];
+            });
+
+        return response()->json(['data' => $categories]);
     }
 }
