@@ -64,4 +64,6 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
 
 Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('/books', BookController::class)->only(['index', 'show']);
-Route::get('/books/{id}', [BookController::class, 'userBookDetail']);
+Route::get('/books-detail', [BookController::class, 'userBooksIndex']);
+Route::get('/books-category/{id}', [BookController::class, 'getBookByCategory']);
+// Route::get('/books/{id}', [BookController::class, 'userBookDetail']);
