@@ -93,13 +93,12 @@ class BookController extends Controller
         $books = $query->with('user', 'category')
             ->leftJoin('users', 'books.id_user', '=', 'users.id')
             ->leftJoin('categories', 'books.id_category', '=', 'categories.id')
-            // ->orderBy('categories.name', 'asc')
             ->select('books.*')
             ->paginate(10);
 
         // Format the results
         $formattedBooks = $books->map(function ($book) {
-            // Pastikan konversi gambar dengan aman
+            // Ensure safe conversion of images
             $imagePaths = is_string($book->image) 
                 ? json_decode($book->image, true) 
                 : ($book->image ?? []);
@@ -118,6 +117,7 @@ class BookController extends Controller
                 'username' => $book->user ? $book->user->username : null,
                 'category' => $book->category ? $book->category->name : null,
                 'content' => $book->content,
+                'created_at' => $book->created_at->format('d-m-Y'),
             ];
         });
 
