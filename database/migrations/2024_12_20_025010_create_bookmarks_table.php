@@ -19,7 +19,10 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('id_user')->references('id')->on('users');
-            $table->foreign('id_book')->references('id')->on('books');
+            $table->foreign('id_book')
+                ->references('id')
+                ->on('books')
+                ->onDelete('cascade');
         });
         Schema::enableForeignKeyConstraints();
     }
