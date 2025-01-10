@@ -6,6 +6,7 @@ use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class BookController extends Controller
@@ -125,20 +126,26 @@ class BookController extends Controller
     public function show(string $id)
     {
         //
-        $books = Book::with(['user','category'])->findOrFail($id);
-
-        if(!$books) {
-            return response()->json(['message'=>'Book not Found'], 404);
+        try {
+            $book = Book::findOrFail($id);
+    
+            $images = is_string($book->image) 
+                ? json_decode($book->image, true) 
+                : ($book->image ?? []);
+    
+            return response()->json([
+                'id' => $book->id,
+                'title' => $book->title,
+                'category' => $book->id_category,
+                'content' => $book->content,
+                'images' => $images, // Mengembalikan data gambar
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Book not found',
+                'error' => $e->getMessage(),
+            ], 404);
         }
-
-        return response()->json([
-            'id' => $books->id,
-            'image' => $books->image,
-            'title' => $books->title,
-            'username' => $books->user ? $books->user->username : null, 
-            'category' => $books->category ? $books->category->name : null,
-            'content' => $books->content,
-        ]);
     }
 
     /**
