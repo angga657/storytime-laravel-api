@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoryController;
@@ -53,6 +54,7 @@ Route::get('/health', function () {
 Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
     Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
     Route::apiResource('/books', BookController::class)->except(['index','show']);
+    Route::apiResource('/bookmarks', BookmarkController::class);
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::post('/upload-image', [UserController::class, 'uploadImage']);
