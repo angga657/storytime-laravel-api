@@ -390,9 +390,9 @@ class BookController extends Controller
             $imagePaths = $imagePaths ?? [];
 
             return [
-                'book_id' => $book->id,
+                'id' => $book->id,
                 'title' => $book->title,
-                'user' => $book->user->username ?? 'Unknown Author',
+                'username' => $book->user->username ?? 'Unknown Author',
                 'avatar_image' => $book->user->avatar_image ?? null,
                 'content' => $book->content,
                 'created_at' => $book->created_at->toIso8601String(),
@@ -450,16 +450,31 @@ class BookController extends Controller
                     $imagePaths = $imagePaths ?? [];
 
                     return [
-                        'book_id' => $book->id,
+                        // 'id' => $book->id,
+                        // 'title' => $book->title,
+                        // 'user' => $book->user->username ?? 'Unknown Author',
+                        // 'avatar_image' => $book->user->avatar_image ?? null,
+                        // 'content' => $book->content,
+                        // 'created_at' => $book->created_at->format('d-m-Y'),
+                        // 'images' => array_map(fn($image, $key) => [
+                        //     'id' => $image['id'] ?? $key + 1,
+                        //     'url' => $image['url'] ?? (is_string($image) ? $image : ''),
+                        // ], $imagePaths, array_keys($imagePaths)),
+                        'id' => $book->id,
+                        'images' => array_map(function ($image, $key) {
+                            return [
+                                'id' => is_array($image) && isset($image['id']) ? $image['id'] : $key + 1,
+                                'url' => is_array($image) && isset($image['url']) 
+                                    ? $image['url'] 
+                                    : (is_string($image) ? $image : ''),
+                            ];
+                        }, $imagePaths, array_keys($imagePaths)),
                         'title' => $book->title,
-                        'user' => $book->user->username ?? 'Unknown Author',
-                        'avatar_image' => $book->user->avatar_image ?? null,
+                        'username' => $book->user ? $book->user->username : null,
+                        'avatar' => $book->user->avatar_image ?? null,
+                        'category' => $book->category ? $book->category->name : null,
                         'content' => $book->content,
                         'created_at' => $book->created_at->format('d-m-Y'),
-                        'images' => array_map(fn($image, $key) => [
-                            'id' => $image['id'] ?? $key + 1,
-                            'url' => $image['url'] ?? (is_string($image) ? $image : ''),
-                        ], $imagePaths, array_keys($imagePaths)),
                     ];
                 })->values(),
             ];
