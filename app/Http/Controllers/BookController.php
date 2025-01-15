@@ -128,18 +128,23 @@ class BookController extends Controller
     {
         //
         // try {
-        //     $book = Book::findOrFail($id);
+        //     // Temukan buku dengan relasi user dan category
+        //     $book = Book::with(['user', 'category'])->findOrFail($id);
     
+        //     // Decode gambar
         //     $images = is_string($book->image) 
         //         ? json_decode($book->image, true) 
         //         : ($book->image ?? []);
     
         //     return response()->json([
-        //         'id' => $book->id,
-        //         'title' => $book->title,
-        //         'category' => $book->id_category,
-        //         'content' => $book->content,
-        //         'images' => $images, // Mengembalikan data gambar
+        //             'id' => $book->id,
+        //             'title' => $book->title,
+        //             'category' => $book->category ? $book->category->name : null,
+        //             'content' => $book->content,
+        //             'images' => $images,
+        //             'username' => $book->user->username ?? 'Unknown User',
+        //             'avatar' => $book->user->avatar_image ?? null,
+                
         //     ], 200);
         // } catch (\Exception $e) {
         //     return response()->json([
@@ -151,21 +156,42 @@ class BookController extends Controller
         try {
             // Temukan buku dengan relasi user dan category
             $book = Book::with(['user', 'category'])->findOrFail($id);
-    
+
             // Decode gambar
             $images = is_string($book->image) 
                 ? json_decode($book->image, true) 
                 : ($book->image ?? []);
-    
+
+            // Dapatkan buku dengan kategori yang sama
+            $relatedBooks = Book::with('user')
+                ->where('id_category', $book->id_category)
+                ->where('id', '!=', $book->id)
+                ->limit(5)
+                ->get()
+                ->map(function ($relatedBook) {
+                    return [
+                        'id' => $relatedBook->id,
+                        'title' => $relatedBook->title,
+                        'category' => $relatedBook->category->name ?? 'Unknown Category',
+                        'username' => $relatedBook->user->username ?? 'Unknown Author',
+                        'avatar' => $relatedBook->user->avatar_image ?? null,
+                        'images' => is_string($relatedBook->image) 
+                            ? json_decode($relatedBook->image, true) 
+                            : ($relatedBook->image ?? []),
+                        'created_at' => $relatedBook->created_at->format('d-m-Y'),
+                    ];
+                });
+
             return response()->json([
-                    'id' => $book->id,
-                    'title' => $book->title,
-                    'category' => $book->category ? $book->category->name : null,
-                    'content' => $book->content,
-                    'images' => $images,
-                    'username' => $book->user->username ?? 'Unknown User',
-                    'avatar' => $book->user->avatar_image ?? null,
-                
+                'id' => $book->id,
+                'title' => $book->title,
+                'category' => $book->category ? $book->category->name : null,
+                'content' => $book->content,
+                'images' => $images,
+                'username' => $book->user->username ?? 'Unknown User',
+                'avatar' => $book->user->avatar_image ?? null,
+                'created_at' => $book->created_at->format('d-m-Y'),
+                'related_books' => $relatedBooks,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
