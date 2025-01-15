@@ -61,6 +61,7 @@ class BookController extends Controller
                 }, $imagePaths, array_keys($imagePaths)),
                 'title' => $book->title,
                 'username' => $book->user ? $book->user->username : null,
+                'avatar' => $book->user->avatar_image ?? null,
                 'category' => $book->category ? $book->category->name : null,
                 'content' => $book->content,
                 'created_at' => $book->created_at->format('d-m-Y'),
