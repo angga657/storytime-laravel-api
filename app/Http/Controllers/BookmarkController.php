@@ -19,7 +19,8 @@ class BookmarkController extends Controller
         $keyword = $request->input('keyword');
 
         $query = Bookmark::query()
-            ->with(['user', 'book']);
+            ->with(['user', 'book'])
+            ->where('id_user', Auth::id()); // Filter berdasarkan pengguna yang login
 
         if ($keyword) {
             $query->whereHas('book', function (Builder $q) use ($keyword) {
@@ -55,10 +56,9 @@ class BookmarkController extends Controller
                 'category' => $book->category->name ?? null,
                 'content' => $book->content ?? null,
                 'created_at' => $bookmark->created_at->format('d-m-Y'),
-                'book_creator' => $book->user->username ?? null, // Tambahkan ini
+                'book_creator' => $book->user->username ?? null,
             ];
         });
-        
 
         return response()->json([
             'data' => $formattedBookmarks,
