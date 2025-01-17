@@ -16,7 +16,7 @@ class CategoryController extends Controller
         $keyword = $request->query('keyword', '');
 
         $categories = Category::where('name', 'like', "%{$keyword}%")
-            ->orderBy('name', 'desc')
+            ->orderBy('id', 'asc')
             ->paginate(10);
 
         return response()->json($categories);

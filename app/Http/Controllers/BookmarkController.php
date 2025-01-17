@@ -76,19 +76,6 @@ class BookmarkController extends Controller
     public function store(Request $request)
     {
         //
-        // $validatedData = $request->validate([
-        //     'id_book' => 'required|exists:books,id',
-        // ], [
-        //     'id_book.exists' => 'The selected book is invalid.',
-        // ]);
-    
-        // Bookmark::create([
-        //     'id_user' => Auth::id(),
-        //     'id_book' => $validatedData['id_book'],
-        // ]);
-    
-        // return response()->json(['message' => 'Bookmark berhasil disimpan'], 201);
-
         $validatedData = $request->validate([
             'id_book' => 'required|exists:books,id',
         ], [

@@ -21,22 +21,6 @@ use App\Http\Resources\UserResource;
 |
 */
 
-// Route::middleware(['auth:sanctum', 'check.token.expiry'])->get('/user', function (Request $request) {
-//     return $request->user();
-// }); 
-
-// Route::middleware(['auth:sanctum', 'check.token.expiry'])->get('/user', function (Request $request) {
-//     return response()->json($request->user()->toArray(), 200);
-// });
-
-// Route::middleware(['auth:sanctum', 'check.token.expiry'])->get('/user', function (Request $request) {
-//     return new UserResource($request->user());
-// });
-
-// Route::get('/user', function (Request $request) {
-//     return new UserResource($request->user());
-// });
-
 Route::post('/register', [UserController::class, 'register']);
 Route::post('/login', [UserController::class, 'login']);
 
@@ -56,6 +40,7 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
     Route::apiResource('/books', BookController::class)->except(['index','show']);
     Route::apiResource('/bookmarks', BookmarkController::class);
 
+
     Route::post('/logout', [UserController::class, 'logout']);
     Route::post('/upload-image', [UserController::class, 'uploadImage']);
     Route::put('/edit-profile', [UserController::class, 'editProfile']);
@@ -65,7 +50,5 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
 });
 
 Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
-Route::apiResource('/books', BookController::class)->only(['index', 'show']);
-Route::get('/books-detail', [BookController::class, 'userBooksIndex']);
-Route::get('/books-category/{id}', [BookController::class, 'getBookByCategory']);
-// Route::get('/books/{id}', [BookController::class, 'userBookDetail']);
+Route::apiResource('/books', BookController::class)->only(['index','show']);
+Route::get('/books-category', [BookController::class, 'getBookByCategory']);

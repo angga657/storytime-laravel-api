@@ -58,10 +58,6 @@ class UserController extends Controller
             "code" => 200,
             "message" => "Login Berhasil",
             "data" => [
-                // "id" => $user->id,
-                // "name" => $user->name,
-                // "username" => $user->username,
-                // "email" => $user->email,
                 "token" => $token
             ]
         ]);
@@ -71,62 +67,6 @@ class UserController extends Controller
 
     public function register(Request $request)
     {
-        // $validator = Validator::make($request->all(), [
-        //     'name' => 'required|string|max:50',
-        //     'username' => 'required|string|max:50|unique:users',
-        //     'email' => 'required|string|email|max:50|unique:users',
-        //     'password' => [
-        //         'required',
-        //         'string',
-        //         'min:8',
-        //         'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!#%*?&])[A-Za-z\d@$!#%*?&]{8,}$/'
-        //     ],
-        //     'confirm_password' => 'required|string|same:password',
-        // ], [
-        //         'name.required' => 'Name must be included',
-        //         'username.required' => 'Username must be included',
-        //         'email.required' => 'Email must be included',
-        //         'password.regex' => 'Password must be at least 8 characters, include at least 1 uppercase letter, 1 number, and 1 symbol.',
-        //         'confirm_password.same' => 'The confirmation must be the same'
-        //     ]);
-
-        // if ($validator->fails()) {
-        //     return response()->json([
-        //         "status" => "Gagal",
-        //         "code" => 422,
-        //         "message" => "Validation errors",
-        //         "errors" => $validator->errors()
-        //     ], 422);
-        // }
-
-        // try {
-        //     $user = User::create([
-        //         'name' => $request->name,
-        //         'username' => $request->username,
-        //         // Make sure this line is present
-        //         'email' => $request->email,
-        //         'password' => Hash::make($request->password),
-        //     ]);
-
-        //     return response()->json([
-        //         "status" => "Berhasil",
-        //         "code" => 201,
-        //         "message" => "User successfully registered",
-        //         "data" => [
-        //             "id" => $user->id,
-        //             "name" => $user->name,
-        //             "username" => $user->username,
-        //             "email" => $user->email,
-        //         ]
-        //     ], 201);
-        // } catch (\Exception $e) {
-        //     Log::error('Error during user registration: ' . $e->getMessage());
-        //     return response()->json([
-        //         "status" => "Gagal",
-        //         "message" => "Server error: " . $e->getMessage()
-        //     ], 500);
-        // }
-
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|min:4',
             'username' => 'required|string|min:4|unique:users',
@@ -167,19 +107,6 @@ class UserController extends Controller
             // Buat token API untuk pengguna
             $token = $user->createToken('tokenName', ['*'], Carbon::now()->addHour())->plainTextToken;
     
-            // return response()->json([
-            //     "status" => "Berhasil",
-            //     "code" => 201,
-            //     "message" => "User successfully registered and logged in",
-            //     "data" => [
-            //         "id" => $user->id,
-            //         "name" => $user->name,
-            //         "username" => $user->username,
-            //         "email" => $user->email,
-            //         "token" => $token // Kembalikan token
-            //     ]
-            // ], 201);
-
             return response()->json([
                 "status" => "Berhasil",
                 "code" => 201,

@@ -127,32 +127,6 @@ class BookController extends Controller
     public function show(string $id)
     {
         //
-        // try {
-        //     // Temukan buku dengan relasi user dan category
-        //     $book = Book::with(['user', 'category'])->findOrFail($id);
-    
-        //     // Decode gambar
-        //     $images = is_string($book->image) 
-        //         ? json_decode($book->image, true) 
-        //         : ($book->image ?? []);
-    
-        //     return response()->json([
-        //             'id' => $book->id,
-        //             'title' => $book->title,
-        //             'category' => $book->category ? $book->category->name : null,
-        //             'content' => $book->content,
-        //             'images' => $images,
-        //             'username' => $book->user->username ?? 'Unknown User',
-        //             'avatar' => $book->user->avatar_image ?? null,
-                
-        //     ], 200);
-        // } catch (\Exception $e) {
-        //     return response()->json([
-        //         'message' => 'Book not found',
-        //         'error' => $e->getMessage(),
-        //     ], 404);
-        // }
-
         try {
             // Temukan buku dengan relasi user dan category
             $book = Book::with(['user', 'category'])->findOrFail($id);
@@ -323,51 +297,6 @@ class BookController extends Controller
         ], 200);
     }
 
-    // public function userBooksIndex(Request $request)
-    // {
-    //     $keyword = $request->input('keyword');
-
-    //     $query = Book::with('user');
-
-    //     if ($keyword) {
-    //         $query->where('title', 'like', "%{$keyword}%")
-    //             ->orWhereHas('user', function (Builder $q) use ($keyword) {
-    //                 $q->where('username', 'like', "%{$keyword}%");
-    //             })
-    //             ->orWhere('content', 'like', "%{$keyword}%");
-    //     }
-
-    //     $books = $query->paginate(10);
-
-    //     $formattedBooks = $books->map(function ($book) {
-    //         $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
-    //         $imagePaths = $imagePaths ?? [];
-
-    //         return [
-    //             'book_id' => $book->id,
-    //             'title' => $book->title,
-    //             'user' => $book->user->username ?? 'Unknown Author',
-    //             'avatar_image' => $book->user->avatar_image ?? null,
-    //             'content' => $book->content,
-    //             'created_at' => $book->created_at->toIso8601String(),
-    //             'images' => array_map(fn($image, $key) => [
-    //                 'id' => $image['id'] ?? $key + 1,
-    //                 'url' => $image['url'] ?? (is_string($image) ? $image : ''),
-    //             ], $imagePaths, array_keys($imagePaths)),
-    //         ];
-    //     });
-
-    //     return response()->json([
-    //         'data' => $formattedBooks->values(),
-    //         'current_page' => $books->currentPage(),
-    //         'last_page' => $books->lastPage(),
-    //         'per_page' => $books->perPage(),
-    //         'total' => $books->total(),
-    //     ]);
-    // }
-
-    
-
     public function getBookByUser(Request $request, $userId)
     {
         $keyword = $request->input('keyword');
@@ -450,16 +379,6 @@ class BookController extends Controller
                     $imagePaths = $imagePaths ?? [];
 
                     return [
-                        // 'id' => $book->id,
-                        // 'title' => $book->title,
-                        // 'user' => $book->user->username ?? 'Unknown Author',
-                        // 'avatar_image' => $book->user->avatar_image ?? null,
-                        // 'content' => $book->content,
-                        // 'created_at' => $book->created_at->format('d-m-Y'),
-                        // 'images' => array_map(fn($image, $key) => [
-                        //     'id' => $image['id'] ?? $key + 1,
-                        //     'url' => $image['url'] ?? (is_string($image) ? $image : ''),
-                        // ], $imagePaths, array_keys($imagePaths)),
                         'id' => $book->id,
                         'images' => array_map(function ($image, $key) {
                             return [
