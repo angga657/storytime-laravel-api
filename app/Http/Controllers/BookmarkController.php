@@ -36,15 +36,15 @@ class BookmarkController extends Controller
 
         $formattedBookmarks = $bookmarks->map(function ($bookmark) {
             $book = $bookmark->book;
-            $imagePaths = is_string($book->image)
-                ? json_decode($book->image, true)
-                : ($book->image ?? []);
+            $imagePaths = is_string($book->images)
+                ? json_decode($book->images, true)
+                : ($book->images ?? []);
         
             $selectedImage = collect($imagePaths)->first();
         
             return [
                 'id' => $bookmark->id,
-                'image' => [
+                'images' => [
                     'id' => is_array($selectedImage) && isset($selectedImage['id'])
                         ? $selectedImage['id']
                         : null,
@@ -94,9 +94,9 @@ class BookmarkController extends Controller
     
         $formattedBookmark = [
             'id' => $bookmark->id,
-            'image' => is_string($bookmark->book->image ?? null)
-                ? collect(json_decode($bookmark->book->image, true))->first()
-                : ($bookmark->book->image ?? null),
+            'images' => is_string($bookmark->book->images ?? null)
+                ? collect(json_decode($bookmark->book->images, true))->first()
+                : ($bookmark->book->images ?? null),
             'title' => $bookmark->book ? $bookmark->book->title : null,
             'username' => $bookmark->user ? $bookmark->user->username : null,
             'category' => $bookmark->book && $bookmark->book->category 
@@ -121,9 +121,9 @@ class BookmarkController extends Controller
         try {
             $book = Book::findOrFail($id);
 
-            $images = is_string($book->image) 
-                ? json_decode($book->image, true) 
-                : ($book->image ?? []);
+            $images = is_string($book->images) 
+                ? json_decode($book->images, true) 
+                : ($book->images ?? []);
 
             $selectedImage = collect($images)->first();
 
@@ -132,7 +132,7 @@ class BookmarkController extends Controller
                 'title' => $book->title,
                 'category' => $book->id_category,
                 'content' => $book->content,
-                'image' => $selectedImage,
+                'images' => $selectedImage,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
