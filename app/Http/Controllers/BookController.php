@@ -101,8 +101,8 @@ class BookController extends Controller
     
             $imageObjects = [];
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $key => $images) {
-                    $path = $images->store('books', 'public'); // Simpan gambar
+                foreach ($request->file('images') as $key => $image) {
+                    $path = $image->store('books', 'public'); // Simpan gambar
                     $imageObjects[] = [
                         'id' => $key + 1, // Anda bisa menggunakan metode unik lainnya untuk ID, seperti UUID
                         'url' => asset('storage/' . $path)
