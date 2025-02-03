@@ -39,7 +39,8 @@ class BookController extends Controller
         // Apply sorting
         switch ($sort) {
             case 'popular': // Sort by bookmark count (descending)
-                $query->withCount('bookmarks')->orderBy('bookmarks_count', 'desc');
+                // $query->withCount('bookmarks')->orderBy('bookmarks_count', 'desc');
+                $query->withCount('bookmarks')->orderByRaw('COALESCE(bookmarks_count, 0) DESC');
                 break;
             case 'a-z': // Sort alphabetically (ascending)
                 $query->orderBy('title', 'asc');
