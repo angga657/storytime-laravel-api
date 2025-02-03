@@ -17,13 +17,14 @@ class BookController extends Controller
     public function index(Request $request)
     {
         
-        // Get the search keyword from the request
+        // Get parameters
         $keyword = $request->input('keyword');
+        $sort = $request->input('sort', 'newest'); // Default sorting: newest
 
         // Start the query for books
         $query = Book::with(['user', 'category']);
 
-        // If a keyword is provided, apply the search conditions
+        // Apply search filter
         if ($keyword) {
             $query->where('title', 'like', "%{$keyword}%")
                 ->orWhereHas('user', function (Builder $q) use ($keyword) {
@@ -35,16 +36,28 @@ class BookController extends Controller
                 ->orWhere('content', 'like', "%{$keyword}%");
         }
 
-        // Paginate the results
-        $books = $query->with('user', 'category')
-            ->leftJoin('users', 'books.id_user', '=', 'users.id')
-            ->leftJoin('categories', 'books.id_category', '=', 'categories.id')
-            ->select('books.*')
-            ->paginate(10);
+        // Apply sorting
+        switch ($sort) {
+            case 'popular': // Sort by bookmark count (descending)
+                $query->withCount('bookmarks')->orderBy('bookmarks_count', 'desc');
+                break;
+            case 'a-z': // Sort alphabetically (ascending)
+                $query->orderBy('title', 'asc');
+                break;
+            case 'z-a': // Sort alphabetically (descending)
+                $query->orderBy('title', 'desc');
+                break;
+            case 'newest': // Default: sort by latest creation date
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
 
-        // Format the results
+        // Paginate results
+        $books = $query->paginate(10);
+
+        // Format results
         $formattedBooks = $books->map(function ($book) {
-            // Ensure safe conversion of images
             $imagePaths = is_string($book->images) 
                 ? json_decode($book->images, true) 
                 : ($book->images ?? []);
@@ -68,7 +81,7 @@ class BookController extends Controller
             ];
         });
 
-        // Return the paginated products as JSON
+        // Return response
         return response()->json([
             'data' => $formattedBooks,
             'current_page' => $books->currentPage(),
