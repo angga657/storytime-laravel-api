@@ -36,6 +36,8 @@ class BookController extends Controller
                 ->orWhere('content', 'like', "%{$keyword}%");
         }
 
+
+        
         // Apply sorting
         switch ($sort) {
             case 'popular': // Sort by bookmark count (descending)
@@ -57,20 +59,21 @@ class BookController extends Controller
         // Paginate results
         $books = $query->paginate(10);
 
-        // Format results
+        // Format the results
         $formattedBooks = $books->map(function ($book) {
-            $imagePaths = is_string($book->images) 
-                ? json_decode($book->images, true) 
-                : ($book->images ?? []);
+            // Ensure safe conversion of images
+            $imagePaths = is_string($book->image) 
+                ? json_decode($book->image, true) 
+                : ($book->image ?? []);
 
             return [
                 'id' => $book->id,
-                'images' => array_map(function ($images, $key) {
+                'images' => array_map(function ($image, $key) {
                     return [
-                        'id' => is_array($images) && isset($images['id']) ? $images['id'] : $key + 1,
-                        'url' => is_array($images) && isset($images['url']) 
-                            ? $images['url'] 
-                            : (is_string($images) ? $images : ''),
+                        'id' => is_array($image) && isset($image['id']) ? $image['id'] : $key + 1,
+                        'url' => is_array($image) && isset($image['url']) 
+                            ? $image['url'] 
+                            : (is_string($image) ? $image : ''),
                     ];
                 }, $imagePaths, array_keys($imagePaths)),
                 'title' => $book->title,
@@ -82,7 +85,7 @@ class BookController extends Controller
             ];
         });
 
-        // Return response
+        // Return the paginated products as JSON
         return response()->json([
             'data' => $formattedBooks,
             'current_page' => $books->currentPage(),
@@ -90,6 +93,7 @@ class BookController extends Controller
             'per_page' => $books->perPage(),
             'total' => $books->total(),
         ]);
+
     }
 
     /**
@@ -101,21 +105,21 @@ class BookController extends Controller
         try {
             $request->validate([
                 'title' => 'required|string',
-                'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'id_category' => 'required|exists:categories,id',
                 'content' => 'required|string',
             ], [
                 'title.required' => 'Title must be included.',
-                'images.*.required' => 'Images must be included.',
+                'image.*.required' => 'Images must be included.',
                 'id_category.exists' => 'Category must be valid.',
-                'images.*.image' => 'The file must be an images.',
-                'images.*.mimes' => 'The images must be a file of type: jpeg, png, jpg, gif.',
-                'images.*.max' => 'The images size must not exceed 2MB.',
+                'image.*.image' => 'The file must be an images.',
+                'image.*.mimes' => 'The images must be a file of type: jpeg, png, jpg, gif.',
+                'image.*.max' => 'The images size must not exceed 2MB.',
             ]);
     
             $imageObjects = [];
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $key => $image) {
+            if ($request->hasFile('image')) {
+                foreach ($request->file('image') as $key => $image) {
                     $path = $image->store('books', 'public'); // Simpan gambar
                     $imageObjects[] = [
                         'id' => $key + 1, // Anda bisa menggunakan metode unik lainnya untuk ID, seperti UUID
@@ -127,7 +131,7 @@ class BookController extends Controller
             // Simpan data ke database
             $requestData = $request->all();
             $requestData['id_user'] = Auth::id(); // Tetapkan ID pengguna login
-            $requestData['images'] = json_encode($imageObjects); // Simpan sebagai JSON 
+            $requestData['image'] = json_encode($imageObjects); // Simpan sebagai JSON 
     
             Book::create($requestData);
     
@@ -158,9 +162,9 @@ class BookController extends Controller
             $book = Book::with(['user', 'category'])->findOrFail($id);
 
             // Decode gambar
-            $images = is_string($book->images) 
-                ? json_decode($book->images, true) 
-                : ($book->images ?? []);
+            $images = is_string($book->image) 
+                ? json_decode($book->image, true) 
+                : ($book->image ?? []);
 
             // Dapatkan buku dengan kategori yang sama
             $relatedBooks = Book::with('user')
@@ -175,9 +179,9 @@ class BookController extends Controller
                         'category' => $relatedBook->category->name ?? 'Unknown Category',
                         'username' => $relatedBook->user->username ?? 'Unknown Author',
                         'avatar' => $relatedBook->user->avatar_image ?? null,
-                        'images' => is_string($relatedBook->images) 
-                            ? json_decode($relatedBook->images, true) 
-                            : ($relatedBook->images ?? []),
+                        'images' => is_string($relatedBook->image) 
+                            ? json_decode($relatedBook->image, true) 
+                            : ($relatedBook->image ?? []),
                         'created_at' => $relatedBook->created_at->format('d-m-Y'),
                     ];
                 });
@@ -216,16 +220,16 @@ class BookController extends Controller
                 'title' => 'sometimes|required|string',
                 'id_category' => 'sometimes|required|exists:categories,id',
                 'content' => 'sometimes|required|string',
-                'images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'image.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
                 // Tambahkan opsi untuk menghapus gambar
                 'remove_images' => 'sometimes|array',
             ], [
                 'title.required' => 'Title must be included.',
-                'images.*.required' => 'Images must be included.',
+                'image.*.required' => 'Images must be included.',
                 'id_category.exists' => 'Category must be valid.',
-                'images.*.image' => 'The file must be an images.',
-                'images.*.mimes' => 'The images must be a file of type: jpeg, png, jpg, gif.',
-                'images.*.max' => 'The images size must not exceed 2MB.',
+                'image.*.image' => 'The file must be an images.',
+                'image.*.mimes' => 'The images must be a file of type: jpeg, png, jpg, gif.',
+                'image.*.max' => 'The images size must not exceed 2MB.',
             ]);
     
             if ($validator->fails()) {
@@ -244,9 +248,9 @@ class BookController extends Controller
             }
 
             // Decode existing images (safely handle different input types)
-            $existingImages = is_string($book->images) 
-                ? json_decode($book->images, true) 
-                : ($book->images ?? []);
+            $existingImages = is_string($book->image) 
+                ? json_decode($book->image, true) 
+                : ($book->image ?? []);
 
             // Proses penghapusan gambar yang dipilih
             if ($request->has('remove_images')) {
@@ -254,13 +258,23 @@ class BookController extends Controller
                 $existingImages = array_filter($existingImages, function($images) use ($removeImageIds) {
                     // Handle different image array structures
                     $imageId = is_array($images) ? ($images['id'] ?? null) : null;
-                    return !in_array($imageId, $removeImageIds);
+                    
+                    // return !in_array($imageId, $removeImageIds);
+                    if (in_array($imageId, $removeImageIds)) {
+                        $filePath = is_array($images) && isset($images['url']) ? str_replace(asset('storage/'), '', $images['url']) : null;
+                        if ($filePath && Storage::disk('public')->exists($filePath)) {
+                            Storage::disk('public')->delete($filePath);
+                        }
+                        return false; // Hapus dari daftar gambar yang tersimpan di database
+                    }
+            
+                    return true;
                 });
             }
 
             // Proses upload gambar baru
-            if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $images) {
+            if ($request->hasFile('image')) {
+                foreach ($request->file('image') as $images) {
                     if ($images && $images->isValid()) {
                         $path = $images->store('books', 'public');
                         
@@ -280,7 +294,7 @@ class BookController extends Controller
             }
 
             // Simpan gambar sebagai JSON
-            $updateData['images'] = json_encode($existingImages, JSON_UNESCAPED_SLASHES);
+            $updateData['image'] = json_encode($existingImages, JSON_UNESCAPED_SLASHES);
 
             // Update buku
             $book->update($updateData);
@@ -292,9 +306,9 @@ class BookController extends Controller
                 'message' => 'Buku berhasil diperbarui',
                 'book' => [
                     'id' => $book->id,
-                    'images' => is_string($book->images) 
-                        ? json_decode($book->images, true) 
-                        : $book->images,
+                    'images' => is_string($book->image) 
+                        ? json_decode($book->image, true) 
+                        : $book->image,
                     'title' => $book->title,
                     'username' => $book->user ? $book->user->username : null, 
                     'category' => $book->category ? $book->category->name : null,
@@ -328,6 +342,117 @@ class BookController extends Controller
         return response()->json([
             'message' => 'Book berhasil dihapus.',
         ], 200);
+    }
+
+    public function getBookByUser(Request $request, $userId)
+    {
+        $keyword = $request->input('keyword');
+
+        // Query books with relationships and filter by user ID
+        $query = Book::with(['user', 'category'])->where('id_user', $userId);
+
+        if ($keyword) {
+            $query->where('title', 'like', "%{$keyword}%")
+                ->orWhere('content', 'like', "%{$keyword}%")
+                ->orWhereHas('category', function (Builder $q) use ($keyword) {
+                    $q->where('name', 'like', "%{$keyword}%");
+                });
+        }
+
+        $books = $query->paginate(10);
+
+        $formattedBooks = $books->map(function ($book) {
+            $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
+            $imagePaths = $imagePaths ?? [];
+
+            return [
+                'id' => $book->id,
+                'title' => $book->title,
+                'username' => $book->user->username ?? 'Unknown Author',
+                'avatar_image' => $book->user->avatar_image ?? null,
+                'content' => $book->content,
+                'created_at' => $book->created_at->format('d-m-Y'),
+                'images' => array_map(fn($images, $key) => [
+                    'id' => $images['id'] ?? $key + 1,
+                    'url' => $images['url'] ?? (is_string($images) ? $images : ''),
+                ], $imagePaths, array_keys($imagePaths)),
+            ];
+        });
+
+        return response()->json([
+            'data' => $formattedBooks->values(),
+            'current_page' => $books->currentPage(),
+            'last_page' => $books->lastPage(),
+            'per_page' => $books->perPage(),
+            'total' => $books->total(),
+        ]);
+    }
+    
+    public function getBookByCategory(Request $request)
+    {
+        $keyword = $request->input('keyword');
+
+        // Query semua buku dengan relasi user dan category
+        $query = Book::with(['user', 'category'])
+            ->when($keyword, function ($q) use ($keyword) {
+                $q->where('title', 'like', "%{$keyword}%")
+                    ->orWhereHas('user', function (Builder $q) use ($keyword) {
+                        $q->where('username', 'like', "%{$keyword}%");
+                    })
+                    ->orWhereHas('category', function (Builder $q) use ($keyword) {
+                        $q->where('name', 'like', "%{$keyword}%");
+                    })
+                    ->orWhere('content', 'like', "%{$keyword}%");
+            })
+            ->orderBy('id_category') // Mengurutkan berdasarkan ID kategori
+            ->orderBy('title'); // Mengurutkan judul dalam setiap kategori
+
+        $books = $query->get();
+
+        // Kelompokkan buku berdasarkan kategori
+        $groupedByCategory = $books->groupBy(function ($book) {
+            return $book->category ? $book->category->id : 'Unknown';
+        });
+
+        // Format data untuk respon JSON
+        $formattedBooks = $groupedByCategory->map(function ($books, $categoryId) {
+            $categoryName = $books->first()->category->name ?? 'Unknown Category';
+
+            return [
+                'category_id' => $categoryId,
+                'category_name' => $categoryName,
+                'books' => $books->map(function ($book) {
+                    $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
+                    $imagePaths = $imagePaths ?? [];
+
+                    return [
+                        'id' => $book->id,
+                        'images' => array_map(function ($images, $key) {
+                            return [
+                                'id' => is_array($images) && isset($images['id']) ? $images['id'] : $key + 1,
+                                'url' => is_array($images) && isset($images['url']) 
+                                    ? $images['url'] 
+                                    : (is_string($images) ? $images : ''),
+                            ];
+                        }, $imagePaths, array_keys($imagePaths)),
+                        'title' => $book->title,
+                        'username' => $book->user ? $book->user->username : null,
+                        'avatar' => $book->user->avatar_image ?? null,
+                        'category' => $book->category ? $book->category->name : null,
+                        'content' => $book->content,
+                        'created_at' => $book->created_at->format('d-m-Y'),
+                    ];
+                })->values(),
+            ];
+        })->values();
+
+        // Return hasil JSON
+        return response()->json([
+            'data' => $formattedBooks,
+            'total_books' => $books->count(),
+        ]);
+
+        
     }
 
 }
