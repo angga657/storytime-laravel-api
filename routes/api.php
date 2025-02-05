@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookmarkController;
-use App\Http\Controllers\GetDataController;
 use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoryController;
@@ -47,9 +46,9 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
     Route::put('/edit-profile', [UserController::class, 'editProfile']);
 
     Route::get('/user', [UserController::class, 'getUser']);
-    Route::get('/books-users/{id}', [GetDataController::class, 'getBookByUser']);
+    Route::get('/books-users/{id}', [BookController::class, 'getBookByUser']);
 });
 
 Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
 Route::apiResource('/books', BookController::class)->only(['index','show']);
-Route::get('/books-category', [GetDataController::class, 'getBookByCategory']);
+Route::get('/books-category', [BookController::class, 'getBookByCategory']);
