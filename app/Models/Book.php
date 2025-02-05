@@ -14,7 +14,7 @@ class Book extends Model
         'id_user',
         'id_category',
         'content',
-        'images',
+        'image',
     ];
 
     public function user()
