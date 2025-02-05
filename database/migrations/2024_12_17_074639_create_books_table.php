@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_user');
             $table->unsignedBigInteger('id_category');
             $table->text('content');
-            $table->text('images');
+            $table->text('image');
             $table->timestamps();
 
             $table->foreign('id_user')->references('id')->on('users');
