@@ -182,18 +182,28 @@ class UserController extends Controller
         try {
             $user = $request->user();
 
-            // Handle the file upload
+            // Jika user sudah memiliki avatar sebelumnya, hapus dari storage
+            if ($user->avatar_image) {
+                $oldFilePath = str_replace('/storage/', 'public/', $user->avatar_image); // Sesuaikan path untuk storage
+                if (Storage::exists($oldFilePath)) {
+                    Storage::delete($oldFilePath);
+                }
+            }
+
+            // Handle file baru
             if ($request->hasFile('avatar_image')) {
                 $file = $request->file('avatar_image');
-                $fileName = time() . '_' . $file->getClientOriginalName();
-
-                // Save file to the 'public/images' directory
+            
+                // Buat nama file unik dengan hash random
+                $fileName = uniqid() . bin2hex(random_bytes(10)) . '.' . $file->getClientOriginalExtension();
+            
+                // Simpan file ke storage
                 $filePath = $file->storeAs('public/avatar_images', $fileName);
-
-                // Save the file path in the database
-                $user->avatar_image = Storage::url($filePath);
+            
+                // Simpan path di database (gunakan format relatif "/storage/avatar_images/...")
+                $user->avatar_image = "/storage/avatar_images/" . $fileName;
                 $user->save();
-
+            
                 return response()->json([
                     'status' => 'Berhasil',
                     'code' => 200,
