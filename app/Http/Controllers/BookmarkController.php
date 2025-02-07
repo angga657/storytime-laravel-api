@@ -40,18 +40,14 @@ class BookmarkController extends Controller
                 ? json_decode($book->image, true)
                 : ($book->image ?? []);
         
-            $selectedImage = collect($imagePaths)->first();
+            // Ambil hanya gambar dengan id 1
+            $filteredImages = array_values(array_filter($imagePaths, function ($image) {
+                return isset($image['id']) && $image['id'] == 1;
+            }));
         
             return [
                 'id' => $bookmark->id,
-                'images' => [
-                    'id' => is_array($selectedImage) && isset($selectedImage['id'])
-                        ? $selectedImage['id']
-                        : null,
-                    'url' => is_array($selectedImage) && isset($selectedImage['url'])
-                        ? $selectedImage['url']
-                        : null,
-                ],
+                'images' => $filteredImages,
                 'title' => $book->title ?? null,
                 'username' => $bookmark->user->username ?? null,
                 'category' => $book->category->name ?? null,
@@ -60,6 +56,7 @@ class BookmarkController extends Controller
                 'book_creator' => $book->user->username ?? null,
             ];
         });
+        
 
         return response()->json([
             'data' => $formattedBookmarks,
