@@ -20,6 +20,7 @@ class BookController extends Controller
         // Get parameters
         $keyword = $request->input('keyword');
         $sort = $request->input('sort', 'newest'); // Default sorting: newest
+        $category = $request->input('id_category'); // Ambil category ID dari request
 
         // Start the query for books
         $query = Book::with(['user', 'category']);
@@ -36,8 +37,11 @@ class BookController extends Controller
                 ->orWhere('content', 'like', "%{$keyword}%");
         }
 
+        // Apply category filter
+        if ($category) {
+            $query->where('id_category', $category);
+        }
 
-        
         // Apply sorting
         switch ($sort) {
             case 'popular': // Sort by bookmark count (descending)
