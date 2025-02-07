@@ -36,9 +36,9 @@ class BookmarkController extends Controller
 
         $formattedBookmarks = $bookmarks->map(function ($bookmark) {
             $book = $bookmark->book;
-            $imagePaths = is_string($book->images)
-                ? json_decode($book->images, true)
-                : ($book->images ?? []);
+            $imagePaths = is_string($book->image)
+                ? json_decode($book->image, true)
+                : ($book->image ?? []);
         
             $selectedImage = collect($imagePaths)->first();
         
@@ -94,9 +94,9 @@ class BookmarkController extends Controller
     
         $formattedBookmark = [
             'id' => $bookmark->id,
-            'images' => is_string($bookmark->book->images ?? null)
-                ? collect(json_decode($bookmark->book->images, true))->first()
-                : ($bookmark->book->images ?? null),
+            'images' => is_string($bookmark->book->image ?? null)
+                ? collect(json_decode($bookmark->book->image, true))->first()
+                : ($bookmark->book->image ?? null),
             'title' => $bookmark->book ? $bookmark->book->title : null,
             'username' => $bookmark->user ? $bookmark->user->username : null,
             'category' => $bookmark->book && $bookmark->book->category 
@@ -121,9 +121,9 @@ class BookmarkController extends Controller
         try {
             $book = Book::findOrFail($id);
 
-            $images = is_string($book->images) 
-                ? json_decode($book->images, true) 
-                : ($book->images ?? []);
+            $images = is_string($book->image) 
+                ? json_decode($book->image, true) 
+                : ($book->image ?? []);
 
             $selectedImage = collect($images)->first();
 
