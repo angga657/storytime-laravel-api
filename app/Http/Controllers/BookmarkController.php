@@ -80,6 +80,17 @@ class BookmarkController extends Controller
             'id_book.exists' => 'The selected book is invalid.',
         ]);
     
+        // Cek apakah sudah ada bookmark dengan id_user dan id_book yang sama
+        $existingBookmark = Bookmark::where('id_user', Auth::id())
+            ->where('id_book', $validatedData['id_book'])
+            ->first();
+    
+        if ($existingBookmark) {
+            return response()->json([
+                'message' => 'Buku ini sudah ada di bookmark Anda.',
+            ], 409); // 409 Conflict
+        }
+    
         // Buat bookmark baru
         $bookmark = Bookmark::create([
             'id_user' => Auth::id(),
