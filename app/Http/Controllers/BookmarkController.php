@@ -161,12 +161,25 @@ class BookmarkController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
         //
-        $bookmark = Bookmark::findOrFail($id);
-
+        $request->validate([
+            'id_book' => 'required|exists:books,id',
+        ]);
+    
+        $bookmark = Bookmark::where('id_user', Auth::id())
+            ->where('id_book', $request->id_book)
+            ->first();
+    
+        if (!$bookmark) {
+            return response()->json([
+                'message' => 'Bookmark tidak ditemukan.',
+            ], 404);
+        }
+    
         $bookmark->delete();
+    
         return response()->json([
             'message' => 'Bookmark berhasil dihapus.',
         ], 200);
