@@ -33,7 +33,7 @@ This is a project built using Laravel 10
 
 - MySQL
 
-- 
+- Postman
 
 ### Instructions
 
