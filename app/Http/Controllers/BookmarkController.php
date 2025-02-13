@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\Bookmark;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -54,6 +55,7 @@ class BookmarkController extends Controller
                 'content' => $book->content ?? null,
                 'created_at' => $bookmark->created_at->format('d-m-Y'),
                 'book_creator' => $book->user->username ?? null,
+                'is_bookmarked' => true, // Karena bookmark baru saja dibuat
             ];
         });
         
@@ -112,6 +114,7 @@ class BookmarkController extends Controller
                 : null,
             'content' => $bookmark->book ? $bookmark->book->content : null,
             'created_at' => $bookmark->created_at->format('d-m-Y'),
+            'is_bookmarked' => true, // Karena bookmark baru saja dibuat
         ];
     
         return response()->json([
@@ -163,12 +166,23 @@ class BookmarkController extends Controller
      */
     public function destroy(string $id)
     {
-        $bookmark = Bookmark::findOrFail($id);
-
-        $bookmark->delete();
-        return response()->json([
-            'message' => 'Bookmark berhasil dihapus.',
-        ], 200);
+        try {
+            $bookmark = Bookmark::findOrFail($id);
+            $bookmark->delete();
+            return response()->json([
+                'message' => 'Bookmark berhasil dihapus.',
+                'is_bookmarked' => false // Menandakan bahwa bookmark sudah tidak aktif
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Bookmark Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menghapus bookmark.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
     
     // public function destroy(Request $request)

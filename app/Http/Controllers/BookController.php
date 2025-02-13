@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\Bookmark;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,18 @@ class BookController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+    private function checkBookmarkStatus($bookId)
+    {
+        $user = Auth::guard('sanctum')->user();
+        if (!$user) {
+            return false;
+        }
+        
+        return Bookmark::where('id_user', $user->id)
+            ->where('id_book', $bookId)
+            ->exists();
+    }
     public function index(Request $request)
     {
         
@@ -86,6 +99,7 @@ class BookController extends Controller
                 'category' => $book->category ? $book->category->name : null,
                 'content' => $book->content,
                 'created_at' => $book->created_at->format('d-m-Y'),
+                'is_bookmarked' => $this->checkBookmarkStatus($book->id)
             ];
         });
 
@@ -187,6 +201,7 @@ class BookController extends Controller
                             ? json_decode($relatedBook->image, true) 
                             : ($relatedBook->image ?? []),
                         'created_at' => $relatedBook->created_at->format('d-m-Y'),
+                        'is_bookmarked' => $this->checkBookmarkStatus($relatedBook->id)
                     ];
                 });
 
@@ -199,6 +214,7 @@ class BookController extends Controller
                 'username' => $book->user->username ?? 'Unknown User',
                 'avatar' => $book->user->avatar_image ?? null,
                 'created_at' => $book->created_at->format('d-m-Y'),
+                'is_bookmarked' => $this->checkBookmarkStatus($book->id),
                 'related_books' => $relatedBooks,
             ], 200);
         } catch (\Exception $e) {
@@ -380,6 +396,7 @@ class BookController extends Controller
                     'id' => $images['id'] ?? $key + 1,
                     'url' => $images['url'] ?? (is_string($images) ? $images : ''),
                 ], $imagePaths, array_keys($imagePaths)),
+                'is_bookmarked' => $this->checkBookmarkStatus($book->id)
             ];
         });
 
@@ -445,6 +462,7 @@ class BookController extends Controller
                         'category' => $book->category ? $book->category->name : null,
                         'content' => $book->content,
                         'created_at' => $book->created_at->format('d-m-Y'),
+                        'is_bookmarked' => $this->checkBookmarkStatus($book->id)
                     ];
                 })->values(),
             ];
