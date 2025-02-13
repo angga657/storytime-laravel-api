@@ -40,7 +40,7 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
     Route::apiResource('/books', BookController::class)->except(['index','show']);
 
     Route::apiResource('/bookmarks', BookmarkController::class);
-    Route::delete('/bookmarks-delete', [BookmarkController::class, 'destroy']);
+    // Route::delete('/bookmarks-delete', [BookmarkController::class, 'destroy']);
 
 
     Route::post('/logout', [UserController::class, 'logout']);
