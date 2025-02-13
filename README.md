@@ -98,7 +98,7 @@ php artisan serve
 - localhost:8000/api/books?sort=newest (Access Books By Latest Date)
 
 This api sort can be combined with id_category
-Example: 
+#### Example: 
 
 - localhost:8000/api/books?sort=a-z&id_category=2
 
