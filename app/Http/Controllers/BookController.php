@@ -333,6 +333,7 @@ class BookController extends Controller
                     'username' => $book->user ? $book->user->username : null, 
                     'category' => $book->category ? $book->category->name : null,
                     'content' => $book->content,
+                    'created_at' => $book->created_at->format('d-m-Y'),
                 ]
             ], 200);
 
