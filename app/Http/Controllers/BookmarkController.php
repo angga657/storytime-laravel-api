@@ -129,28 +129,6 @@ class BookmarkController extends Controller
     public function show(string $id)
     {
         //
-        try {
-            $book = Book::findOrFail($id);
-
-            $images = is_string($book->image) 
-                ? json_decode($book->image, true) 
-                : ($book->image ?? []);
-
-            $selectedImage = collect($images)->first();
-
-            return response()->json([
-                'id' => $book->id,
-                'title' => $book->title,
-                'category' => $book->id_category,
-                'content' => $book->content,
-                'images' => $selectedImage,
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Book not found',
-                'error' => $e->getMessage(),
-            ], 404);
-        }
     }
 
     /**
