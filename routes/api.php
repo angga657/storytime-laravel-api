@@ -21,8 +21,6 @@ use App\Http\Resources\UserResource;
 |
 */
 
-Route::post('/register', [UserController::class, 'register']);
-Route::post('/login', [UserController::class, 'login']);
 
 Route::get('/health', function () {
     return response()->json([
@@ -34,13 +32,15 @@ Route::get('/health', function () {
 
 
 
+Route::post('/register', [UserController::class, 'register']);
+Route::post('/login', [UserController::class, 'login']);
 
 Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
     Route::apiResource('/categories', CategoryController::class)->except(['index', 'show']);
     Route::apiResource('/books', BookController::class)->except(['index','show']);
 
     Route::apiResource('/bookmarks', BookmarkController::class);
-    // Route::delete('/bookmarks-delete', [BookmarkController::class, 'destroy']);
+    Route::delete('/bookmarks-delete', [BookmarkController::class, 'destroy']);
 
 
     Route::post('/logout', [UserController::class, 'logout']);
