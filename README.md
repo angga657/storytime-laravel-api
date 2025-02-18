@@ -29,7 +29,7 @@ This is a project built using Laravel 10
 
 - PHP version 8.1
 
-- Composer
+- Composer version 2.5.5
 
 - MySQL
 
@@ -40,8 +40,8 @@ This is a project built using Laravel 10
 1. Configure the database in the .env file:
 
 DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
+DB_HOST=your_host
+DB_PORT=your_port
 DB_DATABASE=storytime
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
