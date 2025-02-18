@@ -153,7 +153,7 @@ class BookController extends Controller
     
             Book::create($requestData);
     
-            return response()->json(['message' => 'Book berhasil disimpan'], 201);
+            return response()->json(['message' => 'Buku berhasil disimpan'], 200);
         } catch (\Exception $e) {
             \Log::error('Gagal menyimpan buku', [
                 'message' => $e->getMessage(),
@@ -219,7 +219,7 @@ class BookController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Book not found',
+                'message' => 'Buku tidak ditemukan',
                 'error' => $e->getMessage(),
             ], 404);
         }
@@ -361,7 +361,7 @@ class BookController extends Controller
 
         $book->delete();
         return response()->json([
-            'message' => 'Book berhasil dihapus.',
+            'message' => 'Buku berhasil dihapus.',
         ], 200);
     }
 
