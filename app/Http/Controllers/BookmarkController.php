@@ -114,7 +114,6 @@ class BookmarkController extends Controller
                 : null,
             'content' => $bookmark->book ? $bookmark->book->content : null,
             'created_at' => $bookmark->created_at->format('d-m-Y'),
-            'is_bookmarked' => true, // Karena bookmark baru saja dibuat
         ];
     
         return response()->json([
