@@ -392,6 +392,7 @@ class BookController extends Controller
                 'username' => $book->user->username ?? 'Unknown Author',
                 'avatar_image' => $book->user->avatar_image ?? null,
                 'content' => $book->content,
+                'category' => $book->category ? $book->category->name : null,
                 'created_at' => $book->created_at->format('d-m-Y'),
                 'images' => array_map(fn($images, $key) => [
                     'id' => $images['id'] ?? $key + 1,
