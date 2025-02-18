@@ -58,9 +58,9 @@ php artisan db:seed --class=CategorySeeder
 
 php artisan serve
 
-5. API Access:
+## API Access:
 
-## Account
+### Account
 
 - localhost:8000/api/register (Access the POST API of register)
 
@@ -75,19 +75,19 @@ php artisan serve
 - localhost:8000/api/upload-image (Access POST API of Upload Profile image in edit profile page)
 
 
-## Books
-### This API use APIResource to access the Books 
+### Books
+#### This API use APIResource to access the Books 
 
 - localhost:8000/api/books (Access APIResource of Books)
  
 
-### Another API Get Data in Books
+#### Another API Get Data in Books
 
 - localhost:8000/api/books-user/{id} (Access Get Data Books By User ID)
 
 - localhost:8000/api/books-category (Access Get Data Books By Category)
 
-### Books Features
+#### Books Features
 
 - localhost:8000/api/books?sort=popular (Access Books data with category count)
 
@@ -102,12 +102,12 @@ This api sort can be combined with id_category
 
 - localhost:8000/api/books?sort=a-z&id_category=2
 
-## Categories
-### This API use APIResource to access the Categories 
+### Categories
+#### This API use APIResource to access the Categories 
 
 - localhost:8000/api/categories (Access APIResource of Categories)
 
-## Bookmarks
-### This API use APIResource to access the Bookmarks
+### Bookmarks
+#### This API use APIResource to access the Bookmarks
 
 - localhost:8000/api/bookmarks (Access APIResource of Bookmarks)
