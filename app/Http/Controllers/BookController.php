@@ -43,11 +43,7 @@ class BookController extends Controller
             $query->where('title', 'like', "%{$keyword}%")
                 ->orWhereHas('user', function (Builder $q) use ($keyword) {
                     $q->where('username', 'like', "%{$keyword}%");
-                })
-                ->orWhereHas('category', function (Builder $q) use ($keyword) {
-                    $q->where('name', 'like', "%{$keyword}%");
-                })
-                ->orWhere('content', 'like', "%{$keyword}%");
+                });
         }
 
         // Apply category filter
@@ -74,7 +70,7 @@ class BookController extends Controller
         }
 
         // Paginate results
-        $books = $query->paginate(10);
+        $books = $query->paginate(12);
 
         // Format the results
         $formattedBooks = $books->map(function ($book) {
@@ -97,8 +93,8 @@ class BookController extends Controller
                 'username' => $book->user ? $book->user->username : null,
                 'avatar' => $book->user->avatar_image ?? null,
                 'category' => $book->category ? $book->category->name : null,
-                'content' => $book->content,
-                'created_at' => $book->created_at->format('d-m-Y'),
+                'content' => strip_tags($book->content ?? ''),
+                'created_at' => $book->created_at->toIso8601String(), 
                 'is_bookmarked' => $this->checkBookmarkStatus($book->id)
             ];
         });
@@ -111,6 +107,7 @@ class BookController extends Controller
             'per_page' => $books->perPage(),
             'total' => $books->total(),
         ]);
+
 
     }
 
@@ -153,7 +150,7 @@ class BookController extends Controller
     
             Book::create($requestData);
     
-            return response()->json(['message' => 'Buku berhasil disimpan'], 200);
+            return response()->json(['message' => 'Book berhasil disimpan'], 201);
         } catch (\Exception $e) {
             \Log::error('Gagal menyimpan buku', [
                 'message' => $e->getMessage(),
@@ -164,9 +161,7 @@ class BookController extends Controller
                 'message' => 'Gagal menyimpan buku.',
                 'error' => $e->getMessage(),
             ], 500);
-        }
-
-        
+        }  
     }
 
     /**
@@ -194,13 +189,14 @@ class BookController extends Controller
                     return [
                         'id' => $relatedBook->id,
                         'title' => $relatedBook->title,
+                        'content' => $relatedBook->content,
                         'category' => $relatedBook->category->name ?? 'Unknown Category',
                         'username' => $relatedBook->user->username ?? 'Unknown Author',
                         'avatar' => $relatedBook->user->avatar_image ?? null,
                         'images' => is_string($relatedBook->image) 
                             ? json_decode($relatedBook->image, true) 
                             : ($relatedBook->image ?? []),
-                        'created_at' => $relatedBook->created_at->format('d-m-Y'),
+                        'created_at' => $relatedBook->created_at->toIso8601String(), 
                         'is_bookmarked' => $this->checkBookmarkStatus($relatedBook->id)
                     ];
                 });
@@ -213,13 +209,13 @@ class BookController extends Controller
                 'images' => $images,
                 'username' => $book->user->username ?? 'Unknown User',
                 'avatar' => $book->user->avatar_image ?? null,
-                'created_at' => $book->created_at->format('d-m-Y'),
+                'created_at' => $book->created_at->toIso8601String(), 
                 'is_bookmarked' => $this->checkBookmarkStatus($book->id),
                 'related_books' => $relatedBooks,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Buku tidak ditemukan',
+                'message' => 'Book not found',
                 'error' => $e->getMessage(),
             ], 404);
         }
@@ -231,7 +227,7 @@ class BookController extends Controller
     public function update(Request $request, $id)
     {
         //
-         try {
+        try {
             // Find the book or fail
             $book = Book::findOrFail($id);
     
@@ -276,20 +272,23 @@ class BookController extends Controller
             if ($request->has('remove_images')) {
                 $removeImageIds = $request->input('remove_images');
                 $existingImages = array_filter($existingImages, function($images) use ($removeImageIds) {
-                    // Handle different image array structures
+                    // Ambil ID gambar dari array (dengan penanganan struktur array yang berbeda)
                     $imageId = is_array($images) ? ($images['id'] ?? null) : null;
                     
-                    // return !in_array($imageId, $removeImageIds);
                     if (in_array($imageId, $removeImageIds)) {
-                        $filePath = is_array($images) && isset($images['url']) ? str_replace(asset('storage/'), '', $images['url']) : null;
+                        $filePath = is_array($images) && isset($images['url']) 
+                            ? str_replace(asset('storage/'), '', $images['url']) 
+                            : null;
                         if ($filePath && Storage::disk('public')->exists($filePath)) {
                             Storage::disk('public')->delete($filePath);
                         }
-                        return false; // Hapus dari daftar gambar yang tersimpan di database
+                        return false; // Hapus gambar dari array
                     }
-            
                     return true;
                 });
+                
+                // Reset key array agar berurutan
+                $existingImages = array_values($existingImages);
             }
 
             // Proses upload gambar baru
@@ -306,11 +305,14 @@ class BookController extends Controller
                         }
                         
                         $existingImages[] = [
-                            'id' => $maxId + 1, // Tambahkan ID baru berdasarkan nilai maksimum
+                            'id' => $maxId + 1, // Tambahkan ID baru
                             'url' => asset('storage/' . $path),
                         ];
                     }
                 }
+                
+                // Reset lagi key array jika diperlukan
+                $existingImages = array_values($existingImages);
             }
 
             // Simpan gambar sebagai JSON
@@ -333,7 +335,7 @@ class BookController extends Controller
                     'username' => $book->user ? $book->user->username : null, 
                     'category' => $book->category ? $book->category->name : null,
                     'content' => $book->content,
-                    'created_at' => $book->created_at->format('d-m-Y'),
+                   'created_at' => $book->created_at->toIso8601String(), 
                 ]
             ], 200);
 
@@ -380,7 +382,7 @@ class BookController extends Controller
                 });
         }
 
-        $books = $query->paginate(10);
+        $books = $query->paginate(12);
 
         $formattedBooks = $books->map(function ($book) {
             $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
@@ -393,7 +395,7 @@ class BookController extends Controller
                 'avatar_image' => $book->user->avatar_image ?? null,
                 'content' => $book->content,
                 'category' => $book->category ? $book->category->name : null,
-                'created_at' => $book->created_at->format('d-m-Y'),
+               'created_at' => $book->created_at->toIso8601String(), 
                 'images' => array_map(fn($images, $key) => [
                     'id' => $images['id'] ?? $key + 1,
                     'url' => $images['url'] ?? (is_string($images) ? $images : ''),
@@ -410,6 +412,59 @@ class BookController extends Controller
             'total' => $books->total(),
         ]);
     }
+
+
+    // public function getBookByUser(Request $request)
+    // {
+    //     // Pastikan user sudah login
+    //     $user = Auth::guard('sanctum')->user();
+    //     if (!$user) {
+    //         return response()->json(['message' => 'Unauthenticated'], 401);
+    //     }
+
+    //     $keyword = $request->input('keyword');
+
+    //     // Query buku berdasarkan user yang sedang login
+    //     $query = Book::with(['user', 'category'])->where('id_user', $user->id);
+
+    //     if ($keyword) {
+    //         $query->where('title', 'like', "%{$keyword}%")
+    //             ->orWhere('content', 'like', "%{$keyword}%")
+    //             ->orWhereHas('category', function (Builder $q) use ($keyword) {
+    //                 $q->where('name', 'like', "%{$keyword}%");
+    //             });
+    //     }
+
+    //     $books = $query->paginate(12);
+
+    //     $formattedBooks = $books->map(function ($book) {
+    //         $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
+    //         $imagePaths = $imagePaths ?? [];
+
+    //         return [
+    //             'id' => $book->id,
+    //             'title' => $book->title,
+    //             'username' => $book->user->username ?? 'Unknown Author',
+    //             'avatar_image' => $book->user->avatar_image ?? null,
+    //             'content' => $book->content,
+    //             'category' => $book->category ? $book->category->name : null,
+    //             'created_at' => $book->created_at->toIso8601String(),
+    //             'images' => array_map(fn($images, $key) => [
+    //                 'id' => $images['id'] ?? $key + 1,
+    //                 'url' => $images['url'] ?? (is_string($images) ? $images : ''),
+    //             ], $imagePaths, array_keys($imagePaths)),
+    //             'is_bookmarked' => $this->checkBookmarkStatus($book->id)
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'data' => $formattedBooks->values(),
+    //         'current_page' => $books->currentPage(),
+    //         'last_page' => $books->lastPage(),
+    //         'per_page' => $books->perPage(),
+    //         'total' => $books->total(),
+    //     ]);
+    // }
     
     public function getBookByCategory(Request $request)
     {
@@ -463,7 +518,7 @@ class BookController extends Controller
                         'avatar' => $book->user->avatar_image ?? null,
                         'category' => $book->category ? $book->category->name : null,
                         'content' => $book->content,
-                        'created_at' => $book->created_at->format('d-m-Y'),
+                       'created_at' => $book->created_at->toIso8601String(), 
                         'is_bookmarked' => $this->checkBookmarkStatus($book->id)
                     ];
                 })->values(),
@@ -474,9 +529,7 @@ class BookController extends Controller
         return response()->json([
             'data' => $formattedBooks,
             'total_books' => $books->count(),
-        ]);
-
-        
+       ]);    
     }
 
 }

@@ -33,7 +33,7 @@ class BookmarkController extends Controller
             });
         }
 
-        $bookmarks = $query->paginate(10);
+        $bookmarks = $query->paginate(12);
 
         $formattedBookmarks = $bookmarks->map(function ($bookmark) {
             $book = $bookmark->book;
@@ -42,18 +42,23 @@ class BookmarkController extends Controller
                 : ($book->image ?? []);
         
             // Ambil hanya gambar dengan id 1
-            $filteredImages = array_values(array_filter($imagePaths, function ($image) {
-                return isset($image['id']) && $image['id'] == 1;
-            }));
+            // $filteredImages = array_values(array_filter($imagePaths, function ($image) {
+            //     return isset($image['id']) && $image['id'] == 1;
+            // }));
+
+            $images = is_string($book->image)
+                ? json_decode($book->image, true)
+                : ($book->image ?? []);
+            $selectedImage = count($images) > 0 ? [$images[0]] : [];
         
             return [
-                'id' => $bookmark->id,
-                'images' => $filteredImages,
+                'id' => $book->id,
+                'images' => $selectedImage,
                 'title' => $book->title ?? null,
                 'username' => $bookmark->user->username ?? null,
                 'category' => $book->category->name ?? null,
-                'content' => $book->content ?? null,
-                'created_at' => $bookmark->created_at->format('d-m-Y'),
+                'content' => strip_tags($book->content ?? ''),
+                'created_at' => $book->created_at->toIso8601String(), 
                 'book_creator' => $book->user->username ?? null,
                 'is_bookmarked' => true, // Karena bookmark baru saja dibuat
             ];
@@ -66,8 +71,7 @@ class BookmarkController extends Controller
             'last_page' => $bookmarks->lastPage(),
             'per_page' => $bookmarks->perPage(),
             'total' => $bookmarks->total(),
-        ]);
-        
+        ]);  
     }
 
     /**
@@ -112,7 +116,8 @@ class BookmarkController extends Controller
             'category' => $bookmark->book && $bookmark->book->category 
                 ? $bookmark->book->category->name 
                 : null,
-            'content' => $bookmark->book ? $bookmark->book->content : null,
+            'content' => strip_tags($bookmark->book ? $bookmark->book->content : null),
+            // 'content' => $bookmark->book ? $bookmark->book->content : null,
             'created_at' => $bookmark->created_at->format('d-m-Y'),
         ];
     
