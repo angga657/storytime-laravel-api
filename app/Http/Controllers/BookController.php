@@ -230,6 +230,11 @@ class BookController extends Controller
         try {
             // Find the book or fail
             $book = Book::findOrFail($id);
+
+            // Cek apakah user yang sedang login adalah pemilik buku
+            if ($book->id_user !== Auth::id()) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
     
             // Validasi
             $validator = Validator::make($request->all(), [
