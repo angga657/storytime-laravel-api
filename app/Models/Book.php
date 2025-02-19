@@ -36,4 +36,14 @@ class Book extends Model
     {
         return $value ? json_decode($value, true) : [];
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($book) {
+            // Hapus semua bookmark terkait sebelum buku dihapus
+            $book->bookmarks()->delete();
+        });
+    }
 }
