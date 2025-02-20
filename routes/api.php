@@ -48,8 +48,8 @@ Route::middleware(['auth:sanctum', 'check.token.expiry'])->group(function () {
     Route::put('/edit-profile', [UserController::class, 'editProfile']);
 
     Route::get('/user', [UserController::class, 'getUser']);
-    Route::get('/books-users/{id}', [BookController::class, 'getBookByUser']);
-    // Route::get('/books-users', [BookController::class, 'getBookByUser']);
+    // Route::get('/books-users/{id}', [BookController::class, 'getBookByUser']);
+    Route::get('/books-users', [BookController::class, 'getBookByUser']);
 });
 
 Route::apiResource('/categories', CategoryController::class)->only(['index', 'show']);
