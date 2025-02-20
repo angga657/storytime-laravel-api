@@ -417,18 +417,9 @@ class BookController extends Controller
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        $keyword = $request->input('keyword');
 
         // Query buku berdasarkan user yang sedang login
         $query = Book::with(['user', 'category'])->where('id_user', $user->id);
-
-        if ($keyword) {
-            $query->where('title', 'like', "%{$keyword}%")
-                ->orWhere('content', 'like', "%{$keyword}%")
-                ->orWhereHas('category', function (Builder $q) use ($keyword) {
-                    $q->where('name', 'like', "%{$keyword}%");
-                });
-        }
 
         $books = $query->paginate(12);
 
