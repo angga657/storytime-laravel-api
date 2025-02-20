@@ -372,12 +372,55 @@ class BookController extends Controller
         ], 200);
     }
 
-    public function getBookByUser(Request $request, $userId)
+    // public function getBookByUser(Request $request, $userId)
+    // {
+
+    //     // Query books with relationships and filter by user ID
+    //     $query = Book::with(['user', 'category'])->where('id_user', $userId);
+    //     $books = $query->paginate(4);
+
+    //     $formattedBooks = $books->map(function ($book) {
+    //         $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
+    //         $imagePaths = $imagePaths ?? [];
+
+    //         return [
+    //             'id' => $book->id,
+    //             'title' => $book->title,
+    //             'username' => $book->user->username ?? 'Unknown Author',
+    //             'avatar_image' => $book->user->avatar_image ?? null,
+    //             'content' => $book->content,
+    //             'category' => $book->category ? $book->category->name : null,
+    //            'created_at' => $book->created_at->toIso8601String(), 
+    //             'images' => array_map(fn($images, $key) => [
+    //                 'id' => $images['id'] ?? $key + 1,
+    //                 'url' => $images['url'] ?? (is_string($images) ? $images : ''),
+    //             ], $imagePaths, array_keys($imagePaths)),
+    //             'is_bookmarked' => $this->checkBookmarkStatus($book->id)
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'data' => $formattedBooks->values(),
+    //         'current_page' => $books->currentPage(),
+    //         'last_page' => $books->lastPage(),
+    //         'per_page' => $books->perPage(),
+    //         'total' => $books->total(),
+    //     ]);
+    // }
+
+
+    public function getBookByUser(Request $request)
     {
+        // Pastikan user sudah login
+        $user = Auth::guard('sanctum')->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
         $keyword = $request->input('keyword');
 
-        // Query books with relationships and filter by user ID
-        $query = Book::with(['user', 'category'])->where('id_user', $userId);
+        // Query buku berdasarkan user yang sedang login
+        $query = Book::with(['user', 'category'])->where('id_user', $user->id);
 
         if ($keyword) {
             $query->where('title', 'like', "%{$keyword}%")
@@ -400,7 +443,7 @@ class BookController extends Controller
                 'avatar_image' => $book->user->avatar_image ?? null,
                 'content' => $book->content,
                 'category' => $book->category ? $book->category->name : null,
-               'created_at' => $book->created_at->toIso8601String(), 
+                'created_at' => $book->created_at->toIso8601String(),
                 'images' => array_map(fn($images, $key) => [
                     'id' => $images['id'] ?? $key + 1,
                     'url' => $images['url'] ?? (is_string($images) ? $images : ''),
@@ -417,79 +460,14 @@ class BookController extends Controller
             'total' => $books->total(),
         ]);
     }
-
-
-    // public function getBookByUser(Request $request)
-    // {
-    //     // Pastikan user sudah login
-    //     $user = Auth::guard('sanctum')->user();
-    //     if (!$user) {
-    //         return response()->json(['message' => 'Unauthenticated'], 401);
-    //     }
-
-    //     $keyword = $request->input('keyword');
-
-    //     // Query buku berdasarkan user yang sedang login
-    //     $query = Book::with(['user', 'category'])->where('id_user', $user->id);
-
-    //     if ($keyword) {
-    //         $query->where('title', 'like', "%{$keyword}%")
-    //             ->orWhere('content', 'like', "%{$keyword}%")
-    //             ->orWhereHas('category', function (Builder $q) use ($keyword) {
-    //                 $q->where('name', 'like', "%{$keyword}%");
-    //             });
-    //     }
-
-    //     $books = $query->paginate(12);
-
-    //     $formattedBooks = $books->map(function ($book) {
-    //         $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
-    //         $imagePaths = $imagePaths ?? [];
-
-    //         return [
-    //             'id' => $book->id,
-    //             'title' => $book->title,
-    //             'username' => $book->user->username ?? 'Unknown Author',
-    //             'avatar_image' => $book->user->avatar_image ?? null,
-    //             'content' => $book->content,
-    //             'category' => $book->category ? $book->category->name : null,
-    //             'created_at' => $book->created_at->toIso8601String(),
-    //             'images' => array_map(fn($images, $key) => [
-    //                 'id' => $images['id'] ?? $key + 1,
-    //                 'url' => $images['url'] ?? (is_string($images) ? $images : ''),
-    //             ], $imagePaths, array_keys($imagePaths)),
-    //             'is_bookmarked' => $this->checkBookmarkStatus($book->id)
-    //         ];
-    //     });
-
-    //     return response()->json([
-    //         'data' => $formattedBooks->values(),
-    //         'current_page' => $books->currentPage(),
-    //         'last_page' => $books->lastPage(),
-    //         'per_page' => $books->perPage(),
-    //         'total' => $books->total(),
-    //     ]);
-    // }
     
     public function getBookByCategory(Request $request)
     {
-        $keyword = $request->input('keyword');
-
+        
         // Query semua buku dengan relasi user dan category
         $query = Book::with(['user', 'category'])
-            ->when($keyword, function ($q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%")
-                    ->orWhereHas('user', function (Builder $q) use ($keyword) {
-                        $q->where('username', 'like', "%{$keyword}%");
-                    })
-                    ->orWhereHas('category', function (Builder $q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
-                    })
-                    ->orWhere('content', 'like', "%{$keyword}%");
-            })
             ->orderBy('id_category') // Mengurutkan berdasarkan ID kategori
             ->orderBy('title'); // Mengurutkan judul dalam setiap kategori
-
         $books = $query->get();
 
         // Kelompokkan buku berdasarkan kategori

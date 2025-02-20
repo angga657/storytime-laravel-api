@@ -18,22 +18,11 @@ class BookmarkController extends Controller
     public function index(Request $request)
     {
         //
-        $keyword = $request->input('keyword');
-
         $query = Bookmark::query()
             ->with(['user', 'book'])
             ->where('id_user', Auth::id()); // Filter berdasarkan pengguna yang login
 
-        if ($keyword) {
-            $query->whereHas('book', function (Builder $q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%");
-            })
-            ->orWhereHas('user', function (Builder $q) use ($keyword) {
-                $q->where('username', 'like', "%{$keyword}%");
-            });
-        }
-
-        $bookmarks = $query->paginate(12);
+        $bookmarks = $query->paginate(4);
 
         $formattedBookmarks = $bookmarks->map(function ($bookmark) {
             $book = $bookmark->book;
