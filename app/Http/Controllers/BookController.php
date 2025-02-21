@@ -421,7 +421,7 @@ class BookController extends Controller
         // Query buku berdasarkan user yang sedang login
         $query = Book::with(['user', 'category'])->where('id_user', $user->id);
 
-        $books = $query->paginate(12);
+        $books = $query->paginate(4);
 
         $formattedBooks = $books->map(function ($book) {
             $imagePaths = is_string($book->image) ? json_decode($book->image, true) : $book->image;
